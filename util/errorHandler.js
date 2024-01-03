@@ -3,7 +3,7 @@ const errorHandler = (error, request, response, next) => {
     return response.status(400).send({ error : 'cannot find id or username' })
   } 
   
-  if (error.name === 'SequelizeValidationError' || error.name === 'SequelizeDatabaseError') {
+  if (error.name === 'SequelizeValidationError' || error.name === 'SequelizeDatabaseError' || error.name === 'Error') {
     const errorMessage = error.name + ': ' + error.message
     return response.status(400).send({ error : errorMessage })
   }

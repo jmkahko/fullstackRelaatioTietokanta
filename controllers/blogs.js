@@ -1,6 +1,7 @@
 const router = require('express').Router()
 const { Blog, User } = require('../models')
 const errorHandler = require('../util/errorHandler')
+const jwt = require('jsonwebtoken')
 
 router.get('/', async(request, response) => {
   const blogs = await Blog.findAll()
@@ -8,11 +9,28 @@ router.get('/', async(request, response) => {
 })
 
 router.post('/', async(request, response, next) => {
-  await Blog.create(request.body)
-    .then(blog => {
-      return response.status(201).json(blog)
-    })
-    .catch(error => next(error))
+  const authorization = request.get('authorization')
+
+  if (authorization && authorization.toLocaleLowerCase().startsWith('bearer ')) {
+    try {
+      const unencoding = jwt.verify(authorization.substring(7), process.env.SECRET)
+      await User.findOne({
+        where: {
+          username: unencoding.username
+        }
+      }).then(async user => {
+        await Blog.create({ ...request.body, userId: user.id })
+        .then(async blog => {
+          return response.status(201).json(blog)
+        }).catch(error => next(error))
+      }).catch(error => next(error))
+    } catch (e) {
+      return response.status(401).json({ error: 'token invalid' })
+    }
+  } else {
+    return response.status(401).json({ error: 'token missing' })
+  }
+  next()
 })
 
 router.delete('/:id', async(request, response, next) => {
