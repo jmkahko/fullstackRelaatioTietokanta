@@ -4,7 +4,15 @@ const errorHandler = require('../util/errorHandler')
 const jwt = require('jsonwebtoken')
 
 router.get('/', async(request, response) => {
-  const blogs = await Blog.findAll()
+  const blogs = await Blog.findAll({
+    attributes: { 
+      exclude: ['userId'] 
+    },
+    include: {
+      model: User,
+      attributes: ['id', 'username', 'name']
+    }
+  })
   response.json(blogs)
 })
 
