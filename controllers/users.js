@@ -1,6 +1,6 @@
 const bcrypt = require('bcrypt')
 const router = require('express').Router()
-const { User, Blog } = require('../models')
+const { User, Blog, ReadingList, Reading } = require('../models')
 const errorHandler = require('../util/errorHandler')
 
 router.get('/', async(request, response) => {
@@ -42,6 +42,36 @@ router.put('/:username', async(request, response, next) => {
       return response.status(201).end()
     })
     .catch(error => next(error))
+})
+
+router.get('/:id', async(request, response, next) => {
+  const user = await User.findByPk(request.params.id, {   
+    include: [{
+      model: Blog,
+      as: 'readings',
+      attributes: [
+        ['id', 'id'],
+        ['url', 'url'],
+        ['title', 'title'],
+        ['author', 'author'],
+        ['likes', 'likes'],
+        ['year', 'year'],
+      ],
+      through: {
+        attributes: []
+      }
+    }],
+    attributes: [
+      ['name', 'name'],
+      ['username', 'username']
+    ]
+  })
+
+  if (user === null) {
+    return response.status(401).json({ error: 'cannot not find user' })
+  }
+
+  return response.status(201).json(user)
 })
 
 router.use(errorHandler)
