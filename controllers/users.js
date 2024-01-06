@@ -1,6 +1,6 @@
 const bcrypt = require('bcrypt')
 const router = require('express').Router()
-const { User, Blog, ReadingList, Reading } = require('../models')
+const { User, Blog, ReadingList } = require('../models')
 const errorHandler = require('../util/errorHandler')
 
 router.get('/', async(request, response) => {
@@ -46,21 +46,24 @@ router.put('/:username', async(request, response, next) => {
 
 router.get('/:id', async(request, response, next) => {
   const user = await User.findByPk(request.params.id, {   
-    include: [{
+    include: {
       model: Blog,
-      as: 'readings',
+      as: 'readingBlogs',
       attributes: [
         ['id', 'id'],
         ['url', 'url'],
         ['title', 'title'],
         ['author', 'author'],
         ['likes', 'likes'],
-        ['year', 'year'],
+        ['year', 'year']
       ],
       through: {
-        attributes: []
+        attributes: [
+          ['read', 'read'],
+          ['id', 'id']
+        ]
       }
-    }],
+    },
     attributes: [
       ['name', 'name'],
       ['username', 'username']

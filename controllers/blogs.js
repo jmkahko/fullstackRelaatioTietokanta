@@ -1,5 +1,5 @@
 const router = require('express').Router()
-const { Blog, User, ReadingList, Reading } = require('../models')
+const { Blog, User, ReadingList } = require('../models')
 const errorHandler = require('../util/errorHandler')
 const jwt = require('jsonwebtoken')
 const { Op } = require('sequelize')
