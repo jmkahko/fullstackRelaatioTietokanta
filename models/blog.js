@@ -1,5 +1,6 @@
 const { Model, DataTypes } = require('sequelize')
 const { sequelize } = require('../util/db')
+const { parseInt } = require('lodash')
 
 class Blog extends Model {}
 Blog.init({
@@ -27,7 +28,19 @@ Blog.init({
     type: DataTypes.INTEGER,
     allowNull: false,
     references: { model: 'users', key: 'id' }
-  }
+  },  
+  year: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    validate: {
+      minMaxYear(value) {
+        const yearNow = new Date().getFullYear()
+        if(parseInt(value) < 1991 || parseInt(value) > yearNow) {
+          throw new Error('year is wrong. Year minimum 1991 and max ' + yearNow)
+        }
+      }
+    }
+  },
 }, {
   sequelize,
   underscored: true,
