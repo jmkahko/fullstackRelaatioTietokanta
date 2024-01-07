@@ -1,6 +1,6 @@
 const bcrypt = require('bcrypt')
 const router = require('express').Router()
-const { User, Blog, ReadingList } = require('../models')
+const { User, Blog, ReadingList, Session } = require('../models')
 const errorHandler = require('../util/errorHandler')
 const { Op } = require('sequelize')
 

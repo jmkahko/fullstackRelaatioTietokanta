@@ -1,5 +1,5 @@
 const router = require('express').Router()
-const { Blog, User, ReadingList } = require('../models')
+const { Blog, User, ReadingList, Session } = require('../models')
 const errorHandler = require('../util/errorHandler')
 const jwt = require('jsonwebtoken')
 const { Op } = require('sequelize')
@@ -46,16 +46,33 @@ router.post('/', async(request, response, next) => {
   if (authorization && authorization.toLocaleLowerCase().startsWith('bearer ')) {
     try {
       const unencoding = jwt.verify(authorization.substring(7), process.env.SECRET)
-      await User.findOne({
+      await Session.findOne({
         where: {
-          username: unencoding.username
+          tokenSessio: authorization.substring(7)
         }
-      }).then(async user => {
-        await Blog.create({ ...request.body, userId: user.id })
-        .then(async blog => {
-          return response.status(201).json(blog)
+      }).then(async token => {
+        if (token === null) {
+          return response.status(401).json({ error: 'sessio invalid' })
+        }
+
+        await User.findOne({
+          where: {
+            [Op.and]: [
+              {
+                username: unencoding.username
+              },
+              {
+                disabled: false
+              }
+            ]
+          }
+        }).then(async user => {
+          await Blog.create({ ...request.body, userId: user.id })
+          .then(async blog => {
+            return response.status(201).json(blog)
+          }).catch(error => next(error))
         }).catch(error => next(error))
-      }).catch(error => next(error))
+      })
     } catch (e) {
       return response.status(401).json({ error: 'token invalid' })
     }
@@ -71,20 +88,37 @@ router.delete('/:id', async(request, response, next) => {
   if (authorization && authorization.toLocaleLowerCase().startsWith('bearer ')) {
     try {
       const unencoding = jwt.verify(authorization.substring(7), process.env.SECRET)
-      await User.findOne({
+      await Session.findOne({
         where: {
-          username: unencoding.username
+          tokenSessio: authorization.substring(7)
         }
-      }).then(async user => {
-        const blog = await Blog.findByPk(request.params.id)
+      }).then(async token => {
+        if (token === null) {
+          return response.status(401).json({ error: 'sessio invalid' })
+        }
 
-        if (user.id === blog.userId) {
-          blog.destroy()
-          return response.status(204).end()
-        } else {
-          return response.status(401).json({ error: 'the user is not the added of the blog ' })
-        }
-      }).catch(error => next(error))
+        await User.findOne({
+          where: {
+            [Op.and]: [
+              {
+                username: unencoding.username
+              },
+              {
+                disabled: false
+              }
+            ]
+          }
+        }).then(async user => {
+          const blog = await Blog.findByPk(request.params.id)
+  
+          if (user.id === blog.userId) {
+            blog.destroy()
+            return response.status(204).end()
+          } else {
+            return response.status(401).json({ error: 'the user is not the added of the blog ' })
+          }
+        }).catch(error => next(error))
+      })
     } catch (e) {
       return response.status(401).json({ error: 'token invalid' })
     }

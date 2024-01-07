@@ -1,6 +1,6 @@
 const errorHandler = (error, request, response, next) => {
   if (error.name === 'TypeError') {
-    return response.status(400).send({ error : 'cannot find id or username' })
+    return response.status(400).send({ error : 'cannot find id or username or account is disabled' })
   } 
   
   if (error.name === 'SequelizeValidationError' || error.name === 'SequelizeDatabaseError' || error.name === 'Error') {
